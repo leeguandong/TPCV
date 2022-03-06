@@ -42,3 +42,17 @@ class CheckpointHook(Hook):
 
         self.args['create_symlink'] = self.file_client.allow_symlink
 
+    def after_train_iter(self, runner):
+        if self.by_epoch:
+            return
+
+    def after_train_epoch(self, runner):
+        if not self.by_epoch:
+            return
+
+        if self.every_n_epochs(runner, self.interval) or (self.save_last and self.is_last_epoch(runner)):
+            runner.logger.info(f'Saving checkpoint at {runner.epoch + 1} epochs')
+            self._save_checkpoint(runner)
+
+    def _save_checkpoint(self, runner):
+        runner.save_checkpoint(self.out_dir, save_optimizer=self.save_optimizer, **self.args)

@@ -3,13 +3,13 @@
 @Author  : leeguandon@gmail.com
 '''
 from .misc import is_str, is_seq_of, is_list_of, is_method_overridden
-from .path import mkdir_or_exist
+from .path import mkdir_or_exist, symlink, scandir
 from .logging import get_logger
 from .registry import Registry, build_from_cfg
 
 __all__ = [
     "is_str", "is_seq_of", "is_list_of", "is_method_overridden",
-    "mkdir_or_exist",
+    "mkdir_or_exist", "symlink", "scandir",
     "get_logger",
     "Registry", "build_from_cfg"
 

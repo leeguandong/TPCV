@@ -45,11 +45,10 @@ class LrUpdaterHook(Hook):
         self.regular_lr = self.get_regular_lr(runner)
         self._set_lr(runner, self.regular_lr)
 
-
     def before_train_iter(self, runner):
-        pass
-
-
+        cur_iter = runner.iter
+        if self.warmup is None or cur_iter > self.warmup_iters:
+            return
 
 
 @HOOKS.register_module()

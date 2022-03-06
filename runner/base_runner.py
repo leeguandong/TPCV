@@ -52,6 +52,14 @@ class BaseRunner(metaclass=ABCMeta):
         self._max_iters = max_iters
         self.log_buffer = LogBuffer()
 
+    @abstractmethod
+    def train(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def val(self):
+        raise NotImplementedError
+
     @property
     def epoch(self):
         return self._epoch
@@ -59,6 +67,14 @@ class BaseRunner(metaclass=ABCMeta):
     @property
     def hooks(self):
         return self._hooks
+
+    @property
+    def iter(self):
+        return self._iter
+
+    @property
+    def inner_iter(self):
+        return self._inner_iter
 
     def get_hook_info(self):
         stage_hook_map = {stage: [] for stage in Hook.stages}
@@ -171,3 +187,7 @@ class BaseRunner(metaclass=ABCMeta):
         self.register_timer_hook(timer_config)
         self.register_logger_hooks(log_config)
         self.register_custom_hooks(custom_hooks_config)
+
+    def call_hook(self, fn_name):
+        for hook in self._hooks:
+            getattr(hook, fn_name)(self)

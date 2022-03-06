@@ -75,3 +75,21 @@ class Hook:
                 trigger_stages.update(map_stages)
 
         return [stage for stage in Hook.stages if stage in trigger_stages]
+
+    def every_n_epochs(self, runner, n):
+        return (runner.epoch + 1) % n == 0 if n > 0 else False
+
+    def every_n_inner_iters(self, runner, n):
+        return (runner.inner_iter + 1) % n == 0 if n > 0 else False
+
+    def every_n_iters(self, runner, n):
+        return (runner.iter + 1) % n == 0 if n > 0 else False
+
+    def end_of_epoch(self, runner):
+        return runner.inner_iter + 1 == len(runner.data_loader)
+
+    def is_last_epoch(self, runner):
+        return runner.epoch + 1 == runner._max_epochs
+
+    def is_last_iter(self, runner):
+        return runner.iter + 1 == runner._max_iters

@@ -3,8 +3,15 @@
 @Author  : leeguandon@gmail.com
 '''
 import time
+import shutil
+import os.path as osp
+import platform
+
+import tpcv
 from .base_runner import BaseRunner
 from .builder import RUNNERS
+
+from .checkpoint import save_checkpoint
 
 
 @RUNNERS.register_module()
@@ -33,6 +40,20 @@ class EpochBasedRunner(BaseRunner):
         self.call_hook("after_train_epoch")
         self._epoch += 1
 
+    def val(self, data_loader, **kwargs):
+        self.model.eval()
+        self.mode = "val"
+        self.data_loader = data_loader
+        self.call_hook('before_val_epoch')
+        # time.sleep(2)  # Prevent possible deadlock during epoch transition
+        for i, data_batch in enumerate(self.data_loader):
+            self._inner_iter = i
+            self.call_hook('before_val_iter')
+            self.run_iter(data_batch, train_mode=False)
+            self.call_hook('after_val_iter')
+
+        self.call_hook('after_val_epoch')
+
     def run(self, data_loaders, workflow, max_epochs=None, **kwargs):
         assert isinstance(data_loaders, list)
         assert len(data_loaders) == len(workflow)
@@ -57,6 +78,24 @@ class EpochBasedRunner(BaseRunner):
         time.sleep(1)
         self.call_hook("after_run")
 
-    def call_hook(self, fn_name):
-        for hook in self._hooks:
-            getattr(hook, fn_name)(self)
+    def save_checkpoint(self,
+                        outdir,
+                        filename_teml="epoch_{}.pth",
+                        save_optimizer=True,
+                        meta=None,
+                        create_symlink=True):
+        if meta is None:
+            meta = {}
+        meta.update(epoch=self.epoch + 1, iter=self.iter)
+
+        filename = filename_teml.format(self.epoch + 1)
+        filepath = osp.join(outdir, filename)
+        optimizer = self.optimizer if save_optimizer else None
+        save_checkpoint(self.model, filepath, optimizer=optimizer, meta=meta)
+
+        if create_symlink:
+            dst_file = osp.join(outdir, "latest.pth")
+            if platform.system() != 'Windows':
+                tpcv.symlink(filename, dst_file)
+            else:
+                shutil.copy(filepath, dst_file)

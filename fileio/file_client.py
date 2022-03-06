@@ -251,7 +251,7 @@ class FileClient:
     def allow_symlink(self):
         return self.client.allow_symlink
 
-    @staticmethod
+    @classmethod
     def infer_client(cls,
                      file_client_args: Optional[dict] = None,
                      uri: Optional[Union[str, Path]] = None) -> 'FileClient':
@@ -259,3 +259,16 @@ class FileClient:
             return cls(prefix=None)
         else:
             return cls(**file_client_args)
+
+    def put(self, obj: bytes, filepath: Union[str, Path]) -> None:
+        """Write data to a given ``filepath`` with 'wb' mode.
+
+        Note:
+            ``put`` should create a directory if the directory of ``filepath``
+            does not exist.
+
+        Args:
+            obj (bytes): Data to be written.
+            filepath (str or Path): Path to write data.
+        """
+        self.client.put(obj, filepath)
